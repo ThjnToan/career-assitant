@@ -1,0 +1,149 @@
+{% extends 'base.html' %}
+{% block title %}{{ application.company }} - CareerAssistant{% endblock %}
+{% block content %}
+
+<div class="d-flex justify-between align-center" style="margin-bottom:24px;">
+  <div>
+    <h1 style="font-size:28px;font-weight:800;">{{ application.company }}</h1>
+    <p style="color:var(--muted);font-size:16px;">{{ application.role }}</p>
+  </div>
+  <div class="d-flex gap-2">
+    <a href="{{ url_for('main.edit_application', id=application.id) }}" class="btn btn-secondary">Edit</a>
+    <form method="POST" action="{{ url_for('main.delete_application', id=application.id) }}" onsubmit="return confirm('Delete this application? This cannot be undone.')" style="display:inline;">
+      <button type="submit" class="btn btn-danger">Delete</button>
+    </form>
+  </div>
+</div>
+
+<div style="display:grid;grid-template-columns:2fr 1fr;gap:20px;">
+  <div>
+    <!-- Details Card -->
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">Details</span>
+        <span class="badge status-{{ application.status.replace(' ','-').replace('/','')[:12] }}">{{ application.status }}</span>
+      </div>
+      <div class="card-body">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+          <div>
+            <p class="text-muted" style="font-size:12px;text-transform:uppercase;">Location</p>
+            <p style="font-weight:600;">{{ application.location or 'Not set' }}</p>
+          </div>
+          <div>
+            <p class="text-muted" style="font-size:12px;text-transform:uppercase;">Salary</p>
+            <p style="font-weight:600;">{{ application.salary_range or 'Not set' }}</p>
+          </div>
+          <div>
+            <p class="text-muted" style="font-size:12px;text-transform:uppercase;">Source</p>
+            <p style="font-weight:600;">{{ application.source or 'Not set' }}</p>
+          </div>
+          <div>
+            <p class="text-muted" style="font-size:12px;text-transform:uppercase;">Applied</p>
+            <p style="font-weight:600;">{{ application.applied_date.strftime('%b %d, %Y') if application.applied_date else '-' }}</p>
+          </div>
+        </div>
+        {% if application.job_url %}
+        <p style="margin-bottom:16px;"><a href="{{ application.job_url }}" target="_blank">View Job Posting &rarr;</a></p>
+        {% endif %}
+        {% if application.description %}
+        <div style="margin-bottom:16px;">
+          <p class="text-muted" style="font-size:12px;text-transform:uppercase;margin-bottom:6px;">Job Description</p>
+          <div style="background:var(--bg);padding:12px;border-radius:8px;font-size:13px;max-height:200px;overflow-y:auto;">
+            {{ application.description[:500] }}{% if application.description|length > 500 %}...{% endif %}
+          </div>
+        </div>
+        {% endif %}
+        {% if application.notes %}
+        <div>
+          <p class="text-muted" style="font-size:12px;text-transform:uppercase;margin-bottom:6px;">Notes</p>
+          <div style="background:var(--bg);padding:12px;border-radius:8px;font-size:14px;white-space:pre-wrap;">{{ application.notes }}</div>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Interviews -->
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">Interviews</span>
+      </div>
+      <div class="card-body">
+        {% if interviews %}
+        <div class="table-responsive">
+          <table class="table">
+            <thead>
+              <tr><th>Round</th><th>Type</th><th>Date</th><th>Status</th><th>Interviewer</th></tr>
+            </thead>
+            <tbody>
+              {% for iv in interviews %}
+              <tr>
+                <td>{{ iv.round_num }}</td>
+                <td>{{ iv.interview_type }}</td>
+                <td>{{ iv.scheduled_date.strftime('%b %d, %Y %H:%M') if iv.scheduled_date else '-' }}</td>
+                <td><span class="badge status-{{ iv.status }}">{{ iv.status }}</span></td>
+                <td>{{ iv.interviewer_name or '-' }} {{ ('(' + iv.interviewer_title + ')') if iv.interviewer_title else '' }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <p class="text-muted">No interviews scheduled yet.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div>
+    <!-- Add Interview -->
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">Schedule Interview</span>
+      </div>
+      <div class="card-body">
+        <form method="POST" action="{{ url_for('main.new_interview', id=application.id) }}">
+          <div class="form-group">
+            <label class="form-label">Type</label>
+            <select name="interview_type" class="form-control">
+              <option>Phone Screen</option>
+              <option>Technical Screen</option>
+              <option>Behavioral</option>
+              <option>Technical</option>
+              <option>Cultural Fit</option>
+              <option>Final Round</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Date & Time</label>
+            <input type="datetime-local" name="scheduled_date" class="form-control" required>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            <div class="form-group">
+              <label class="form-label">Duration (min)</label>
+              <input type="number" name="duration" value="60" class="form-control">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Location</label>
+              <input type="text" name="location" class="form-control" placeholder="Zoom, Onsite...">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Interviewer Name</label>
+            <input type="text" name="interviewer_name" class="form-control">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Video Link</label>
+            <input type="url" name="video_link" class="form-control" placeholder="https://zoom.us/j/...">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Notes</label>
+            <textarea name="notes" class="form-control" placeholder="Prep notes, questions to ask..."></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary" style="width:100%;">Schedule</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

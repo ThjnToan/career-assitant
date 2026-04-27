@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+{% block title %}Job Parser - CareerAssistant{% endblock %}
+{% block content %}
+
+<div style="max-width:800px;margin:0 auto;">
+  <div class="d-flex justify-between align-center" style="margin-bottom:24px;">
+    <h1 style="font-size:28px;font-weight:800;">Job Description Parser</h1>
+  </div>
+
+  <div class="card" style="margin-bottom:20px;">
+    <div class="card-body">
+      <form method="POST">
+        <div class="form-group">
+          <label class="form-label">Paste Job Description</label>
+          <textarea name="job_description" class="form-control" rows="12" placeholder="Paste the full job description here...">{{ request.form.get('job_description','') }}</textarea>
+        </div>
+        <div style="display:flex;justify-content:flex-end;">
+          <button type="submit" class="btn btn-primary">Analyze</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  {% if result %}
+  <div class="card" style="margin-bottom:20px;">
+    <div class="card-header">
+      <span class="card-title">What They Want</span>
+    </div>
+    <div class="card-body">
+      {% if result.skills %}
+      <div class="mb-3">
+        <p class="text-muted" style="font-size:12px;text-transform:uppercase;margin-bottom:6px;">Technical Skills</p>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;">
+          {% for skill in result.skills %}
+          <span class="skill-tag">{{ skill }}</span>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+
+      {% if result.years_experience %}
+      <div class="mb-3">
+        <p class="text-muted" style="font-size:12px;text-transform:uppercase;margin-bottom:6px;">Experience Required</p>
+        <p style="font-weight:600;">{{ result.years_experience|min }}+ years</p>
+      </div>
+      {% endif %}
+
+      {% if result.education %}
+      <div class="mb-3">
+        <p class="text-muted" style="font-size:12px;text-transform:uppercase;margin-bottom:6px;">Education</p>
+        <p style="font-weight:600;">{{ result.education|join(', ')|title }}</p>
+      </div>
+      {% endif %}
+
+      {% if result.soft_skills %}
+      <div>
+        <p class="text-muted" style="font-size:12px;text-transform:uppercase;margin-bottom:6px;">Soft Skills</p>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;">
+          {% for skill in result.soft_skills %}
+          <span class="soft-tag">{{ skill }}</span>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  {% if suggestions %}
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">Tailoring Suggestions</span>
+    </div>
+    <div class="card-body">
+      <ul style="padding-left:20px;">
+        {% for s in suggestions %}
+        <li style="margin-bottom:8px;">{{ s }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+  {% endif %}
+  {% endif %}
+</div>
+
+{% endblock %}

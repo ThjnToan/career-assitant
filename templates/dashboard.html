@@ -1,0 +1,172 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard - CareerAssistant{% endblock %}
+{% block content %}
+
+<!-- Greeting -->
+<div style="margin-bottom:24px;">
+  <h1 style="font-size:28px;font-weight:800;">
+    {% if now.hour < 12 %}Good morning{% elif now.hour < 18 %}Good afternoon{% else %}Good evening{% endif %},
+    {{ user.name or user.username }}
+  </h1>
+  <p class="text-muted">{{ now.strftime('%A, %B %d') }} &middot; Week {{ now.isocalendar()[1] }}</p>
+</div>
+
+<!-- Alerts -->
+{% if today_interviews %}
+<div class="alert alert-warning" style="margin-bottom:16px;">
+  <strong>You have {{ today_interviews|length }} interview(s) today!</strong> 
+  {% for iv in today_interviews %}
+    {{ iv.application.company }} ({{ iv.interview_type }}) at {{ iv.scheduled_date.strftime('%H:%M') }}{% if not loop.last %}, {% endif %}
+  {% endfor %}
+</div>
+{% endif %}
+
+{% if overdue %}
+<div class="alert alert-danger" style="margin-bottom:16px;">
+  <strong>{{ overdue|length }} application(s) need follow-up.</strong> 
+  <a href="{{ url_for('main.followups') }}">View them &rarr;</a>
+</div>
+{% endif %}
+
+<!-- Stats -->
+<div class="stats-grid">
+  <div class="card stat-card">
+    <div class="stat-value">{{ total }}</div>
+    <div class="stat-label">Total Applications</div>
+  </div>
+  <div class="card stat-card">
+    <div class="stat-value" style="color:var(--success);">{{ active }}</div>
+    <div class="stat-label">Active Pipeline</div>
+  </div>
+  <div class="card stat-card">
+    <div class="stat-value" style="color:var(--warning);">{{ upcoming_interviews|length }}</div>
+    <div class="stat-label">Upcoming Interviews</div>
+  </div>
+  <div class="card stat-card">
+    <div class="stat-value">{{ apps_this_week }}</div>
+    <div class="stat-label">This Week</div>
+  </div>
+</div>
+
+<div style="display:grid; grid-template-columns:2fr 1fr; gap:20px;">
+  <div>
+    <!-- Pipeline -->
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">Pipeline</span>
+        <a href="{{ url_for('main.pipeline') }}" class="btn btn-secondary btn-sm">View All</a>
+      </div>
+      <div class="card-body">
+        {% set status_order = ['Applied','Phone Screen','Technical Screen','Interview Round 1','Interview Round 2','Interview Round 3','Final Round','Offer','Negotiating','Accepted','Rejected','Withdrawn','Ghosted'] %}
+        <div style="display:flex;flex-direction:column;gap:10px;">
+        {% for status in status_order %}
+          {% if status in pipeline %}
+          <div style="display:flex;align-items:center;gap:12px;">
+            <span style="width:140px;font-size:13px;font-weight:600;color:var(--muted);">{{ status }}</span>
+            <div style="flex:1;height:20px;background:var(--border);border-radius:10px;overflow:hidden;">
+              <div style="height:100%;width:{{ (pipeline[status] / total * 100) if total else 0 }}%;background:var(--primary);border-radius:10px;min-width:4px;"></div>
+            </div>
+            <span style="width:30px;text-align:right;font-weight:700;font-size:14px;">{{ pipeline[status] }}</span>
+          </div>
+          {% endif %}
+        {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Upcoming Interviews -->
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">Upcoming Interviews</span>
+        <a href="{{ url_for('main.interviews') }}" class="btn btn-secondary btn-sm">All Interviews</a>
+      </div>
+      <div class="card-body">
+        {% if upcoming_interviews %}
+        <div class="table-responsive">
+          <table class="table">
+            <thead>
+              <tr><th>When</th><th>Company</th><th>Type</th><th>With</th></tr>
+            </thead>
+            <tbody>
+              {% for iv in upcoming_interviews %}
+              <tr>
+                <td>{{ iv.scheduled_date.strftime('%a %b %d %H:%M') }}</td>
+                <td><a href="{{ url_for('main.application_detail', id=iv.application.id) }}">{{ iv.application.company }}</a></td>
+                <td><span class="badge status-{{ iv.interview_type.replace(' ','-')[:8] }}">{{ iv.interview_type }}</span></td>
+                <td>{{ iv.interviewer_name or '-' }} {{ ('(' + iv.interviewer_title + ')') if iv.interviewer_title else '' }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <p class="text-muted">No upcoming interviews. <a href="{{ url_for('main.applications') }}">Log one when you schedule it!</a></p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div>
+    <!-- Weekly Goal -->
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">Weekly Goals</span>
+      </div>
+      <div class="card-body">
+        <div class="mb-3">
+          <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
+            <span style="font-size:14px;font-weight:600;">Applications</span>
+            <span style="font-size:14px;color:var(--muted);">{{ apps_this_week }} / {{ user.weekly_apps_goal }}</span>
+          </div>
+          <div style="height:8px;background:var(--border);border-radius:4px;overflow:hidden;">
+            <div style="height:100%;width:{{ (apps_this_week / user.weekly_apps_goal * 100)|int if user.weekly_apps_goal else 0 }}%;background:var(--primary);border-radius:4px;"></div>
+          </div>
+        </div>
+        <div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
+            <span style="font-size:14px;font-weight:600;">Networking</span>
+            <span style="font-size:14px;color:var(--muted);">0 / {{ user.weekly_net_goal }}</span>
+          </div>
+          <div style="height:8px;background:var(--border);border-radius:4px;overflow:hidden;">
+            <div style="height:100%;width:0%;background:var(--success);border-radius:4px;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">Quick Actions</span>
+      </div>
+      <div class="card-body" style="display:flex;flex-direction:column;gap:10px;">
+        <a href="{{ url_for('main.new_application') }}" class="btn btn-primary">+ Log Application</a>
+        <a href="{{ url_for('main.parser_page') }}" class="btn btn-secondary">Parse Job Description</a>
+        <a href="{{ url_for('main.report') }}" class="btn btn-secondary">Weekly Report</a>
+      </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">Recent Activity</span>
+      </div>
+      <div class="card-body">
+        {% if recent_activity %}
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          {% for act in recent_activity %}
+          <div style="font-size:13px;">
+            <span class="text-muted">{{ act.created_at.strftime('%b %d') }}</span>
+            <span>{{ act.description }}</span>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-muted">No activity yet. Start by logging an application!</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

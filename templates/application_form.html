@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+{% block title %}{{ 'Edit' if application else 'New' }} Application - CareerAssistant{% endblock %}
+{% block content %}
+
+<div style="max-width:700px;margin:0 auto;">
+  <div class="d-flex justify-between align-center" style="margin-bottom:24px;">
+    <h1 style="font-size:28px;font-weight:800;">{{ 'Edit' if application else 'Log New' }} Application</h1>
+    <a href="{{ url_for('main.applications') }}" class="btn btn-secondary btn-sm">&larr; Back</a>
+  </div>
+
+  <div class="card">
+    <div class="card-body">
+      <form method="POST">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+          <div class="form-group">
+            <label class="form-label">Company *</label>
+            <input type="text" name="company" class="form-control" value="{{ application.company if application else '' }}" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Role *</label>
+            <input type="text" name="role" class="form-control" value="{{ application.role if application else '' }}" required>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+          <div class="form-group">
+            <label class="form-label">Location</label>
+            <input type="text" name="location" class="form-control" value="{{ application.location if application else '' }}" placeholder="e.g. Remote, San Francisco">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Salary Range</label>
+            <input type="text" name="salary_range" class="form-control" value="{{ application.salary_range if application else '' }}" placeholder="e.g. $120k-$160k">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Job URL</label>
+          <input type="url" name="job_url" class="form-control" value="{{ application.job_url if application else '' }}">
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+          <div class="form-group">
+            <label class="form-label">Source</label>
+            <input type="text" name="source" class="form-control" value="{{ application.source if application else '' }}" placeholder="LinkedIn, Referral, Company Website...">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Status</label>
+            <select name="status" class="form-control">
+              {% for s in statuses %}
+              <option value="{{ s }}" {% if application and application.status == s %}selected{% endif %}>{{ s }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Job Description</label>
+          <textarea name="description" class="form-control" placeholder="Paste the job description here for parsing later...">{{ application.description if application else '' }}</textarea>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Notes</label>
+          <textarea name="notes" class="form-control" placeholder="Your personal notes about this application...">{{ application.notes if application else '' }}</textarea>
+        </div>
+
+        <div class="d-flex gap-2" style="justify-content:flex-end;">
+          <a href="{{ url_for('main.applications') }}" class="btn btn-secondary">Cancel</a>
+          <button type="submit" class="btn btn-primary">{{ 'Update' if application else 'Log Application' }}</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,307 @@
+{% extends 'base.html' %}
+{% block title %}Pipeline - CareerAssistant{% endblock %}
+{% block extra_css %}
+<style>
+.pipeline-funnel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 20px 0;
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+.funnel-stage {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-weight: 700;
+  font-size: 14px;
+  height: 52px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.funnel-stage:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+  z-index: 10;
+}
+
+.funnel-stage .stage-label {
+  z-index: 2;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+}
+
+.funnel-stage .stage-count {
+  position: absolute;
+  right: 16px;
+  background: rgba(255,255,255,0.25);
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 16px;
+  font-weight: 800;
+  backdrop-filter: blur(4px);
+}
+
+.funnel-stage .stage-info {
+  position: absolute;
+  left: 16px;
+  font-size: 11px;
+  opacity: 0.85;
+  font-weight: 500;
+}
+
+/* Stage colors - gradient from cool to warm */
+.stage-Applied { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); width: 100%; }
+.stage-Phone { background: linear-gradient(135deg, #5b7cf9 0%, #3b82f6 100%); width: 92%; }
+.stage-Technical { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); width: 84%; }
+.stage-Interview1 { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); width: 76%; }
+.stage-Interview2 { background: linear-gradient(135deg, #f6d365 0%, #fda085 100%); width: 68%; }
+.stage-Interview3 { background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); width: 60%; }
+.stage-Final { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); width: 52%; }
+.stage-Offer { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); width: 44%; }
+.stage-Negotiating { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); width: 40%; }
+.stage-Accepted { background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); width: 36%; }
+.stage-Rejected { background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%); width: 88%; }
+.stage-Withdrawn { background: linear-gradient(135deg, #bdc3c7 0%, #2c3e50 100%); width: 80%; }
+.stage-Ghosted { background: linear-gradient(135deg, #8e9eab 0%, #eef2f3 100%); width: 72%; color: #475569; }
+.stage-Ghosted .stage-count { background: rgba(0,0,0,0.1); color: #475569; }
+
+/* Connector lines between stages */
+.funnel-connector {
+  width: 2px;
+  height: 12px;
+  background: linear-gradient(to bottom, var(--border), transparent);
+  opacity: 0.5;
+}
+
+/* Stats below funnel */
+.funnel-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-top: 32px;
+  text-align: center;
+}
+
+.funnel-stat {
+  padding: 20px;
+  border-radius: 12px;
+  background: var(--card);
+  border: 1px solid var(--border);
+}
+
+.funnel-stat-value {
+  font-size: 32px;
+  font-weight: 800;
+  color: var(--primary);
+}
+
+.funnel-stat-label {
+  font-size: 12px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-top: 4px;
+}
+
+/* Conversion rate arrows */
+.conversion-arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin: 8px 0;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.conversion-arrow .arrow {
+  font-size: 18px;
+  color: var(--success);
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .funnel-stage {
+    font-size: 12px;
+    height: 44px;
+  }
+  .funnel-stage .stage-count {
+    font-size: 14px;
+    padding: 2px 8px;
+  }
+  .funnel-stats {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Dark mode adjustments */
+[data-theme="dark"] .stage-Ghosted {
+  color: #cbd5e1;
+}
+[data-theme="dark"] .stage-Ghosted .stage-count {
+  color: #cbd5e1;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="d-flex justify-between align-center" style="margin-bottom:24px;">
+  <div>
+    <h1 style="font-size:28px;font-weight:800;">Your Pipeline</h1>
+    <p class="text-muted">{{ total }} total applications &middot; Visualize your job search journey</p>
+  </div>
+  <a href="{{ url_for('main.applications') }}" class="btn btn-secondary btn-sm">View All Applications</a>
+</div>
+
+<div class="card">
+  <div class="card-body">
+    {% if pipeline %}
+    
+    <!-- Aesthetic Funnel -->
+    <div class="pipeline-funnel">
+      {% set ordered_stages = [
+        ('Applied', 'stage-Applied', 'Applications'),
+        ('Phone Screen', 'stage-Phone', 'Phone Screens'),
+        ('Technical Screen', 'stage-Technical', 'Tech Screens'),
+        ('Interview Round 1', 'stage-Interview1', '1st Interviews'),
+        ('Interview Round 2', 'stage-Interview2', '2nd Interviews'),
+        ('Interview Round 3', 'stage-Interview3', '3rd Interviews'),
+        ('Final Round', 'stage-Final', 'Final Rounds'),
+        ('Offer', 'stage-Offer', 'Offers'),
+        ('Negotiating', 'stage-Negotiating', 'Negotiating'),
+        ('Accepted', 'stage-Accepted', 'Accepted!')
+      ] %}
+      
+      {% set has_active = false %}
+      
+      {% for status, class_name, label in ordered_stages %}
+        {% set count = pipeline.get(status, 0) %}
+        {% if count > 0 %}
+          <div class="funnel-stage {{ class_name }}" title="{{ status }}: {{ count }} application(s)">
+            <span class="stage-info">{{ label }}</span>
+            <span class="stage-label">{{ status }}</span>
+            <span class="stage-count">{{ count }}</span>
+          </div>
+          {% if not loop.last %}
+            {% set next_idx = loop.index %}
+            {% if next_idx < ordered_stages|length %}
+              {% set next_status = ordered_stages[next_idx][0] %}
+              {% set next_count = pipeline.get(next_status, 0) %}
+              {% if next_count > 0 %}
+              <div class="conversion-arrow">
+                <span class="arrow">&#8595;</span>
+                {% if count > 0 %}
+                  <span>{{ (next_count / count * 100)|int }}% conversion</span>
+                {% endif %}
+              </div>
+              {% endif %}
+            {% endif %}
+          {% endif %}
+        {% endif %}
+      {% endfor %}
+      
+      <!-- Rejected / Ghosted at bottom -->
+      {% set closed_stages = [
+        ('Rejected', 'stage-Rejected', 'Rejected'),
+        ('Withdrawn', 'stage-Withdrawn', 'Withdrawn'),
+        ('Ghosted', 'stage-Ghosted', 'Ghosted')
+      ] %}
+      
+      {% set has_closed = false %}
+      {% for status, class_name, label in closed_stages %}
+        {% if pipeline.get(status, 0) > 0 %}
+          {% set has_closed = true %}
+        {% endif %}
+      {% endfor %}
+      
+      {% if has_closed %}
+      <div style="margin-top:24px;padding-top:24px;border-top:1px dashed var(--border);width:100%;">
+        <p class="text-muted" style="text-align:center;font-size:12px;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;">Closed Applications</p>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;">
+          {% for status, class_name, label in closed_stages %}
+            {% set count = pipeline.get(status, 0) %}
+            {% if count > 0 %}
+            <div class="funnel-stage {{ class_name }}" style="width:200px;height:40px;font-size:12px;" title="{{ status }}: {{ count }}">
+              <span class="stage-label">{{ status }}</span>
+              <span class="stage-count">{{ count }}</span>
+            </div>
+            {% endif %}
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+    </div>
+    
+    <!-- Key Stats -->
+    <div class="funnel-stats">
+      <div class="funnel-stat">
+        <div class="funnel-stat-value">{{ total }}</div>
+        <div class="funnel-stat-label">Total Applied</div>
+      </div>
+      <div class="funnel-stat">
+        <div class="funnel-stat-value">{{ active }}</div>
+        <div class="funnel-stat-label">Active Pipeline</div>
+      </div>
+      <div class="funnel-stat">
+        <div class="funnel-stat-value">{{ pipeline.get('Offer', 0) + pipeline.get('Negotiating', 0) + pipeline.get('Accepted', 0) }}</div>
+        <div class="funnel-stat-label">Offers</div>
+      </div>
+    </div>
+    
+    {% else %}
+    <div style="text-align:center;padding:60px 20px;">
+      <div style="font-size:64px;margin-bottom:16px;">&#127912;</div>
+      <h2 style="font-size:22px;font-weight:700;margin-bottom:8px;">Your pipeline is empty</h2>
+      <p class="text-muted" style="margin-bottom:24px;">Start tracking your job applications to see your pipeline come to life.</p>
+      <a href="{{ url_for('main.new_application') }}" class="btn btn-primary btn-lg">+ Log Your First Application</a>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Detailed Table View (Optional) -->
+{% if pipeline %}
+<div class="card" style="margin-top:20px;">
+  <div class="card-header">
+    <span class="card-title">Detailed Breakdown</span>
+  </div>
+  <div class="card-body">
+    <div class="table-responsive">
+      <table class="table">
+        <thead>
+          <tr><th>Status</th><th>Count</th><th>% of Total</th><th style="text-align:right;">Visual</th></tr>
+        </thead>
+        <tbody>
+          {% set status_order = ['Applied','Phone Screen','Technical Screen','Interview Round 1','Interview Round 2','Interview Round 3','Final Round','Offer','Negotiating','Accepted','Rejected','Withdrawn','Ghosted'] %}
+          {% for status in status_order %}
+            {% set count = pipeline.get(status, 0) %}
+            {% if count > 0 %}
+            <tr>
+              <td><span class="badge status-{{ status.replace(' ','-').replace('/','')[:12] }}">{{ status }}</span></td>
+              <td style="font-weight:700;">{{ count }}</td>
+              <td>{{ (count / total * 100)|int }}%</td>
+              <td style="text-align:right;">
+                <div style="display:inline-block;width:120px;height:8px;background:var(--border);border-radius:4px;overflow:hidden;">
+                  <div style="height:100%;width:{{ (count / total * 100) }}%;background:var(--primary);border-radius:4px;"></div>
+                </div>
+              </td>
+            </tr>
+            {% endif %}
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+{% endblock %}

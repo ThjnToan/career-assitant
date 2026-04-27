@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block title %}CareerAssistant{% endblock %}</title>
+<style>
+:root { --primary:#2563eb; --primary-dark:#1d4ed8; --success:#16a34a; --warning:#d97706; --danger:#dc2626; --bg:#f8fafc; --card:#ffffff; --text:#1e293b; --muted:#64748b; --border:#e2e8f0; }
+[data-theme="dark"] { --primary:#3b82f6; --primary-dark:#2563eb; --success:#22c55e; --warning:#f59e0b; --danger:#ef4444; --bg:#0f172a; --card:#1e293b; --text:#f1f5f9; --muted:#94a3b8; --border:#334155; }
+* { box-sizing:border-box; margin:0; padding:0; }
+body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; background:var(--bg); color:var(--text); line-height:1.5; transition:background 0.3s, color 0.3s; }
+a { color:var(--primary); text-decoration:none; }
+a:hover { text-decoration:underline; }
+.container { max-width:1200px; margin:0 auto; padding:20px; }
+
+/* Navbar */
+.navbar { background:var(--card); border-bottom:1px solid var(--border); padding:0; position:sticky; top:0; z-index:100; transition:background 0.3s, border-color 0.3s; }
+.navbar-inner { max-width:1200px; margin:0 auto; padding:0 20px; display:flex; align-items:center; justify-content:space-between; height:60px; }
+.navbar-brand { font-size:20px; font-weight:700; color:var(--primary); }
+.navbar-brand span { color:var(--text); font-weight:400; transition:color 0.3s; }
+.navbar-nav { display:flex; gap:24px; list-style:none; align-items:center; }
+.navbar-nav a { color:var(--muted); font-size:14px; font-weight:500; padding:4px 0; border-bottom:2px solid transparent; transition:all 0.2s; }
+.navbar-nav a:hover, .navbar-nav a.active { color:var(--primary); text-decoration:none; border-bottom-color:var(--primary); }
+.navbar-user { font-size:14px; color:var(--muted); }
+
+/* Theme toggle */
+.theme-toggle { background:none; border:1px solid var(--border); color:var(--muted); border-radius:8px; padding:6px 10px; cursor:pointer; font-size:16px; line-height:1; transition:all 0.2s; }
+.theme-toggle:hover { background:var(--bg); color:var(--text); }
+
+/* Flash messages */
+.flash-messages { margin-bottom:20px; }
+.alert { padding:12px 16px; border-radius:8px; margin-bottom:10px; font-size:14px; }
+.alert-success { background:#dcfce7; color:#166534; border:1px solid #bbf7d0; }
+.alert-danger { background:#fee2e2; color:#991b1b; border:1px solid #fecaca; }
+.alert-info { background:#dbeafe; color:#1e40af; border:1px solid #bfdbfe; }
+.alert-warning { background:#fef3c7; color:#92400e; border:1px solid #fde68a; }
+[data-theme="dark"] .alert-success { background:#14532d; color:#86efac; border-color:#166534; }
+[data-theme="dark"] .alert-danger { background:#450a0a; color:#fca5a5; border-color:#991b1b; }
+[data-theme="dark"] .alert-info { background:#172554; color:#93c5fd; border-color:#1e40af; }
+[data-theme="dark"] .alert-warning { background:#451a03; color:#fde68a; border-color:#92400e; }
+
+/* Cards */
+.card { background:var(--card); border-radius:12px; box-shadow:0 1px 3px rgba(0,0,0,0.06); border:1px solid var(--border); margin-bottom:20px; transition:background 0.3s, border-color 0.3s; }
+[data-theme="dark"] .card { box-shadow:0 1px 3px rgba(0,0,0,0.2); }
+.card-header { padding:20px 24px 0; display:flex; justify-content:space-between; align-items:center; }
+.card-title { font-size:18px; font-weight:700; }
+.card-body { padding:20px 24px; }
+
+/* Buttons */
+.btn { display:inline-flex; align-items:center; gap:6px; padding:8px 16px; border-radius:8px; font-size:14px; font-weight:600; border:none; cursor:pointer; transition:all 0.2s; }
+.btn-primary { background:var(--primary); color:#fff; }
+.btn-primary:hover { background:var(--primary-dark); text-decoration:none; }
+.btn-success { background:var(--success); color:#fff; }
+.btn-danger { background:var(--danger); color:#fff; }
+.btn-secondary { background:#f1f5f9; color:var(--text); border:1px solid var(--border); }
+[data-theme="dark"] .btn-secondary { background:#334155; color:var(--text); border-color:#475569; }
+.btn-sm { padding:6px 12px; font-size:13px; }
+.btn-lg { padding:12px 24px; font-size:16px; }
+
+/* Forms */
+.form-group { margin-bottom:16px; }
+.form-label { display:block; font-size:14px; font-weight:600; margin-bottom:6px; color:var(--text); }
+.form-control { width:100%; padding:10px 14px; border:1px solid var(--border); border-radius:8px; font-size:14px; transition:border 0.2s; background:var(--card); color:var(--text); }
+.form-control:focus { outline:none; border-color:var(--primary); box-shadow:0 0 0 3px rgba(37,99,235,0.1); }
+[data-theme="dark"] .form-control:focus { box-shadow:0 0 0 3px rgba(59,130,246,0.2); }
+textarea.form-control { min-height:120px; resize:vertical; }
+select.form-control { height:42px; }
+
+/* Tables */
+.table { width:100%; border-collapse:collapse; font-size:14px; }
+.table th { text-align:left; padding:12px 16px; color:var(--muted); font-weight:600; font-size:12px; text-transform:uppercase; letter-spacing:0.3px; border-bottom:2px solid var(--border); }
+.table td { padding:12px 16px; border-bottom:1px solid var(--border); }
+.table tr:hover { background:var(--bg); }
+.table a { font-weight:600; }
+
+/* Status badges */
+.badge { display:inline-block; padding:4px 10px; border-radius:20px; font-size:12px; font-weight:600; }
+.status-Applied { background:#dbeafe; color:#1e40af; }
+.status-Phone,.status-Technical { background:#cffafe; color:#0e7490; }
+.status-Interview { background:#fef3c7; color:#92400e; }
+.status-Final { background:#ede9fe; color:#5b21b6; }
+.status-Offer,.status-Negotiating,.status-Accepted { background:#dcfce7; color:#166534; }
+.status-Rejected { background:#fee2e2; color:#991b1b; }
+.status-Withdrawn,.status-Ghosted { background:#f3f4f6; color:#6b7280; }
+[data-theme="dark"] .status-Applied { background:#172554; color:#93c5fd; }
+[data-theme="dark"] .status-Phone,.status-Technical { background:#083344; color:#67e8f9; }
+[data-theme="dark"] .status-Interview { background:#451a03; color:#fde68a; }
+[data-theme="dark"] .status-Final { background:#2e1065; color:#c4b5fd; }
+[data-theme="dark"] .status-Offer,.status-Negotiating,.status-Accepted { background:#14532d; color:#86efac; }
+[data-theme="dark"] .status-Rejected { background:#450a0a; color:#fca5a5; }
+[data-theme="dark"] .status-Withdrawn,.status-Ghosted { background:#1e293b; color:#94a3b8; }
+
+/* Stats grid */
+.stats-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(200px,1fr)); gap:16px; margin-bottom:24px; }
+.stat-card { padding:20px; text-align:center; }
+.stat-value { font-size:32px; font-weight:800; color:var(--primary); line-height:1; }
+.stat-label { font-size:13px; color:var(--muted); margin-top:6px; text-transform:uppercase; letter-spacing:0.5px; }
+
+/* Auth */
+.auth-container { min-height:100vh; display:flex; align-items:center; justify-content:center; padding:20px; }
+.auth-box { width:100%; max-width:420px; }
+.auth-logo { text-align:center; margin-bottom:32px; }
+.auth-logo h1 { font-size:28px; color:var(--primary); }
+.auth-logo p { color:var(--muted); margin-top:4px; }
+
+/* Skill tags */
+.skill-tag { display:inline-block; padding:4px 12px; border-radius:20px; font-size:13px; font-weight:600; background:#dbeafe; color:#1e40af; }
+.soft-tag { display:inline-block; padding:4px 12px; border-radius:20px; font-size:13px; font-weight:600; background:#dcfce7; color:#166534; }
+[data-theme="dark"] .skill-tag { background:#172554; color:#93c5fd; }
+[data-theme="dark"] .soft-tag { background:#14532d; color:#86efac; }
+
+/* Utility */
+.text-muted { color:var(--muted); }
+.text-success { color:var(--success); }
+.text-danger { color:var(--danger); }
+.text-warning { color:var(--warning); }
+.mb-0 { margin-bottom:0; }
+.mb-2 { margin-bottom:12px; }
+.mb-3 { margin-bottom:16px; }
+.mt-3 { margin-top:16px; }
+.d-flex { display:flex; }
+.justify-between { justify-content:space-between; }
+.align-center { align-items:center; }
+.gap-2 { gap:8px; }
+
+/* Pipeline bars */
+.pipeline-bar { height:20px; background:#334155; border-radius:10px; overflow:hidden; }
+[data-theme="light"] .pipeline-bar { background:#f1f5f9; }
+
+/* Auth page theme toggle */
+.auth-theme-toggle { position:fixed; top:20px; right:20px; }
+
+@media (max-width:768px) {
+  .navbar-nav { gap:16px; }
+  .navbar-nav a { font-size:13px; }
+  .stats-grid { grid-template-columns:repeat(2,1fr); }
+}
+</style>
+{% block extra_css %}{% endblock %}
+</head>
+<body>
+{% if current_user.is_authenticated %}
+<nav class="navbar">
+  <div class="navbar-inner">
+    <a href="{{ url_for('main.dashboard') }}" class="navbar-brand">Career<span>Assistant</span></a>
+    <ul class="navbar-nav">
+      <li><a href="{{ url_for('main.dashboard') }}" class="{% if request.endpoint == 'main.dashboard' %}active{% endif %}">Dashboard</a></li>
+      <li><a href="{{ url_for('main.applications') }}" class="{% if request.endpoint == 'main.applications' %}active{% endif %}">Applications</a></li>
+      <li><a href="{{ url_for('main.interviews') }}" class="{% if request.endpoint == 'main.interviews' %}active{% endif %}">Interviews</a></li>
+      <li><a href="{{ url_for('main.pipeline') }}" class="{% if request.endpoint == 'main.pipeline' %}active{% endif %}">Pipeline</a></li>
+      <li><a href="{{ url_for('main.parser_page') }}" class="{% if request.endpoint == 'main.parser_page' %}active{% endif %}">Parser</a></li>
+      <li><a href="{{ url_for('main.profile') }}">Profile</a></li>
+      <li><a href="{{ url_for('auth.logout') }}">Logout</a></li>
+    </ul>
+    <div style="display:flex;align-items:center;gap:12px;">
+      <button class="theme-toggle" id="themeToggle" title="Toggle dark mode">&#9790;</button>
+      <span class="navbar-user">{{ current_user.name or current_user.username }}</span>
+    </div>
+  </div>
+</nav>
+{% else %}
+<button class="theme-toggle auth-theme-toggle" id="themeToggle" title="Toggle dark mode">&#9790;</button>
+{% endif %}
+
+<div class="container">
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="flash-messages">
+      {% for category, message in messages %}
+        <div class="alert alert-{{ category }}">{{ message }}</div>
+      {% endfor %}
+    </div>
+    {% endif %}
+  {% endwith %}
+
+  {% block content %}{% endblock %}
+</div>
+
+<script>
+(function() {
+  const html = document.documentElement;
+  const toggle = document.getElementById('themeToggle');
+  const saved = localStorage.getItem('careerassistant-theme');
+  if (saved) {
+    html.setAttribute('data-theme', saved);
+    updateIcon(saved);
+  }
+  function updateIcon(theme) {
+    if (toggle) toggle.innerHTML = theme === 'dark' ? '&#9728;' : '&#9790;';
+  }
+  if (toggle) {
+    toggle.addEventListener('click', function() {
+      const current = html.getAttribute('data-theme') || 'light';
+      const next = current === 'dark' ? 'light' : 'dark';
+      html.setAttribute('data-theme', next);
+      localStorage.setItem('careerassistant-theme', next);
+      updateIcon(next);
+    });
+  }
+})();
+</script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,33 @@
+{
+  "user": {
+    "name": "Alex Johnson",
+    "email": "thtoan39@gmail.com",
+    "phone": "+1 (555) 123-4567",
+    "linkedin": "linkedin.com/in/alexjohnson",
+    "portfolio": "alexjohnson.dev",
+    "location": "San Francisco, CA"
+  },
+  "goals": {
+    "weekly_applications": 5,
+    "weekly_networking": 2,
+    "target_roles": ["Software Engineer", "Full Stack Developer", "Backend Engineer"],
+    "target_locations": ["San Francisco, CA", "Remote", "New York, NY"],
+    "min_salary": 120000
+  },
+  "notifications": {
+    "daily_digest": true,
+    "digest_time": "08:00",
+    "interview_reminder_hours": 1,
+    "follow_up_reminder_days": 7
+  },
+  "resume": {
+    "master_file": "resumes/master_resume.md",
+    "output_dir": "resumes/tailored",
+    "sections": ["summary", "skills", "experience", "education", "projects", "certifications"]
+  },
+  "cover_letter": {
+    "template_dir": "cover_letters/templates",
+    "output_dir": "cover_letters/generated",
+    "default_tone": "professional"
+  }
+}

@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+{% block title %}Interviews - CareerAssistant{% endblock %}
+{% block content %}
+
+<div class="d-flex justify-between align-center" style="margin-bottom:24px;">
+  <h1 style="font-size:28px;font-weight:800;">Interviews</h1>
+</div>
+
+<div class="card" style="margin-bottom:20px;">
+  <div class="card-header">
+    <span class="card-title">Upcoming</span>
+  </div>
+  <div class="card-body">
+    {% if upcoming %}
+    <div class="table-responsive">
+      <table class="table">
+        <thead>
+          <tr><th>Date</th><th>Company</th><th>Role</th><th>Type</th><th>Interviewer</th><th>Location</th></tr>
+        </thead>
+        <tbody>
+          {% for iv in upcoming %}
+          <tr>
+            <td style="font-weight:600;">{{ iv.scheduled_date.strftime('%b %d, %Y %H:%M') }}</td>
+            <td><a href="{{ url_for('main.application_detail', id=iv.application.id) }}">{{ iv.application.company }}</a></td>
+            <td>{{ iv.application.role }}</td>
+            <td><span class="badge status-{{ iv.interview_type.replace(' ','-')[:8] }}">{{ iv.interview_type }}</span></td>
+            <td>{{ iv.interviewer_name or '-' }}</td>
+            <td>
+              {% if iv.video_link %}
+              <a href="{{ iv.video_link }}" target="_blank">Join</a>
+              {% else %}
+              {{ iv.location or '-' }}
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <p class="text-muted">No upcoming interviews. <a href="{{ url_for('main.applications') }}">Schedule one from an application.</a></p>
+    {% endif %}
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <span class="card-title">Past Interviews</span>
+  </div>
+  <div class="card-body">
+    {% if past %}
+    <div class="table-responsive">
+      <table class="table">
+        <thead>
+          <tr><th>Date</th><th>Company</th><th>Type</th><th>Rating</th></tr>
+        </thead>
+        <tbody>
+          {% for iv in past %}
+          <tr>
+            <td>{{ iv.scheduled_date.strftime('%b %d, %Y') }}</td>
+            <td><a href="{{ url_for('main.application_detail', id=iv.application.id) }}">{{ iv.application.company }}</a></td>
+            <td>{{ iv.interview_type }}</td>
+            <td>{{ iv.rating or '-' }}/5</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <p class="text-muted">No past interviews recorded.</p>
+    {% endif %}
+  </div>
+</div>
+
+{% endblock %}

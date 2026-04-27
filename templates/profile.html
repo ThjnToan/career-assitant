@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+{% block title %}Profile - CareerAssistant{% endblock %}
+{% block content %}
+
+<div style="max-width:700px;margin:0 auto;">
+  <div class="d-flex justify-between align-center" style="margin-bottom:24px;">
+    <h1 style="font-size:28px;font-weight:800;">Your Profile</h1>
+  </div>
+
+  <div class="card">
+    <div class="card-body">
+      <form method="POST">
+        <h3 style="font-size:16px;text-transform:uppercase;color:var(--muted);margin-bottom:16px;letter-spacing:0.5px;">Personal Info</h3>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+          <div class="form-group">
+            <label class="form-label">Full Name</label>
+            <input type="text" name="name" class="form-control" value="{{ user.name }}">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Email</label>
+            <input type="email" name="email" class="form-control" value="{{ user.email }}">
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+          <div class="form-group">
+            <label class="form-label">Title</label>
+            <input type="text" name="title" class="form-control" value="{{ user.title }}" placeholder="e.g. Software Engineer">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Location</label>
+            <input type="text" name="location" class="form-control" value="{{ user.location }}">
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+          <div class="form-group">
+            <label class="form-label">Phone</label>
+            <input type="text" name="phone" class="form-control" value="{{ user.phone }}">
+          </div>
+          <div class="form-group">
+            <label class="form-label">LinkedIn</label>
+            <input type="text" name="linkedin" class="form-control" value="{{ user.linkedin }}">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Portfolio / Website</label>
+          <input type="text" name="portfolio" class="form-control" value="{{ user.portfolio }}">
+        </div>
+
+        <h3 style="font-size:16px;text-transform:uppercase;color:var(--muted);margin:24px 0 16px;letter-spacing:0.5px;">Goals</h3>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+          <div class="form-group">
+            <label class="form-label">Weekly Applications Goal</label>
+            <input type="number" name="weekly_apps_goal" class="form-control" value="{{ user.weekly_apps_goal }}" min="1">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Weekly Networking Goal</label>
+            <input type="number" name="weekly_net_goal" class="form-control" value="{{ user.weekly_net_goal }}" min="0">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Target Roles (comma separated)</label>
+          <input type="text" name="target_roles" class="form-control" value="{{ user.target_roles }}" placeholder="Software Engineer, Data Scientist, Product Manager">
+        </div>
+
+        <div style="display:flex;justify-content:flex-end;margin-top:8px;">
+          <button type="submit" class="btn btn-primary">Save Profile</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
