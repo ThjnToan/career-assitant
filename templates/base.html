@@ -149,6 +149,7 @@ select.form-control { height:42px; }
       <li><a href="{{ url_for('main.interviews') }}" class="{% if request.endpoint == 'main.interviews' %}active{% endif %}">Interviews</a></li>
       <li><a href="{{ url_for('main.pipeline') }}" class="{% if request.endpoint == 'main.pipeline' %}active{% endif %}">Pipeline</a></li>
       <li><a href="{{ url_for('main.parser_page') }}" class="{% if request.endpoint == 'main.parser_page' %}active{% endif %}">Parser</a></li>
+      <li><a href="{{ url_for('main.questions') }}" class="{% if request.endpoint == 'main.questions' %}active{% endif %}">Questions</a></li>
       <li><a href="{{ url_for('main.profile') }}">Profile</a></li>
       <li><a href="{{ url_for('auth.logout') }}">Logout</a></li>
     </ul>

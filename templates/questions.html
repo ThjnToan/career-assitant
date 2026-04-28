@@ -1,0 +1,109 @@
+{% extends 'base.html' %}
+{% block title %}Question Bank - CareerAssistant{% endblock %}
+{% block content %}
+
+<div class="d-flex justify-between align-center" style="margin-bottom:24px;">
+  <div>
+    <h1 style="font-size:28px;font-weight:800;">Interview Question Bank</h1>
+    <p class="text-muted">Practice and prepare for every interview</p>
+  </div>
+</div>
+
+<!-- Add New Question -->
+<div class="card" style="margin-bottom:20px;">
+  <div class="card-header">
+    <span class="card-title">Add Custom Question</span>
+  </div>
+  <div class="card-body">
+    <form method="POST" action="{{ url_for('main.new_question') }}">
+      <div style="display:grid;grid-template-columns:1fr 1fr 3fr auto;gap:12px;align-items:end;">
+        <div class="form-group" style="margin-bottom:0;">
+          <label class="form-label">Role Type</label>
+          <select name="role_type" class="form-control">
+            <option>General</option>
+            <option>Software Engineer</option>
+            <option>Data Scientist</option>
+            <option>Product Manager</option>
+          </select>
+        </div>
+        <div class="form-group" style="margin-bottom:0;">
+          <label class="form-label">Category</label>
+          <select name="category" class="form-control">
+            <option>Behavioral</option>
+            <option>Technical</option>
+            <option>System Design</option>
+          </select>
+        </div>
+        <div class="form-group" style="margin-bottom:0;">
+          <label class="form-label">Question</label>
+          <input type="text" name="question_text" class="form-control" placeholder="Enter your question..." required>
+        </div>
+        <button type="submit" class="btn btn-primary">Add</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Filters -->
+<div class="card" style="margin-bottom:20px;">
+  <div class="card-body">
+    <form method="GET" style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;">
+      <div style="min-width:160px;">
+        <label class="form-label">Category</label>
+        <select name="category" class="form-control">
+          <option value="">All Categories</option>
+          {% for cat in categories %}
+          <option value="{{ cat }}" {% if current_category == cat %}selected{% endif %}>{{ cat }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div style="min-width:160px;">
+        <label class="form-label">Role Type</label>
+        <select name="role_type" class="form-control">
+          <option value="">All Roles</option>
+          {% for role in role_types %}
+          <option value="{{ role }}" {% if current_role == role %}selected{% endif %}>{{ role }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div style="flex:1;min-width:200px;">
+        <label class="form-label">Search</label>
+        <input type="text" name="search" value="{{ search }}" class="form-control" placeholder="Search questions...">
+      </div>
+      <button type="submit" class="btn btn-secondary">Filter</button>
+      {% if search or current_category or current_role %}
+      <a href="{{ url_for('main.questions') }}" class="btn btn-secondary">Clear</a>
+      {% endif %}
+    </form>
+  </div>
+</div>
+
+<!-- Questions List -->
+<div class="card">
+  <div class="card-body">
+    {% if questions %}
+    <div style="display:flex;flex-direction:column;gap:12px;">
+      {% for q in questions %}
+      <div style="padding:16px;background:var(--bg);border-radius:8px;border:1px solid var(--border);">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
+          <div style="display:flex;gap:8px;align-items:center;">
+            <span class="badge status-{{ q.category.replace(' ','-')[:12] }}">{{ q.category }}</span>
+            <span style="font-size:12px;color:var(--muted);">{{ q.role_type }}</span>
+            {% if not q.is_default %}
+            <span style="font-size:11px;background:var(--primary);color:#fff;padding:2px 8px;border-radius:12px;">Custom</span>
+            {% endif %}
+          </div>
+        </div>
+        <p style="font-size:15px;font-weight:600;margin:0;">{{ q.question_text }}</p>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div style="text-align:center;padding:40px;">
+      <p class="text-muted">No questions found. Add your first question above!</p>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+{% endblock %}

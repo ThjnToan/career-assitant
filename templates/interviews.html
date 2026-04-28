@@ -15,7 +15,7 @@
     <div class="table-responsive">
       <table class="table">
         <thead>
-          <tr><th>Date</th><th>Company</th><th>Role</th><th>Type</th><th>Interviewer</th><th>Location</th></tr>
+          <tr><th>Date</th><th>Company</th><th>Role</th><th>Type</th><th>Interviewer</th><th>Location</th><th>Prep</th></tr>
         </thead>
         <tbody>
           {% for iv in upcoming %}
@@ -32,6 +32,7 @@
               {{ iv.location or '-' }}
               {% endif %}
             </td>
+            <td><a href="{{ url_for('main.interview_questions', id=iv.id) }}" class="btn btn-sm btn-secondary">Prep</a></td>
           </tr>
           {% endfor %}
         </tbody>

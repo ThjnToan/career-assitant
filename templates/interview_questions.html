@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+{% block title %}Interview Prep - CareerAssistant{% endblock %}
+{% block content %}
+
+<div class="d-flex justify-between align-center" style="margin-bottom:24px;">
+  <div>
+    <h1 style="font-size:28px;font-weight:800;">Interview Prep</h1>
+    <p class="text-muted">{{ interview.application.company }} - {{ interview.interview_type }} (Round {{ interview.round_num }})</p>
+  </div>
+  <a href="{{ url_for('main.application_detail', id=interview.application.id) }}" class="btn btn-secondary btn-sm">&larr; Back to Application</a>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+  <!-- Suggested Questions -->
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">Suggested Questions</span>
+    </div>
+    <div class="card-body">
+      {% if suggested %}
+      <div style="display:flex;flex-direction:column;gap:12px;">
+        {% for q in suggested %}
+        <div style="padding:14px;background:var(--bg);border-radius:8px;border:1px solid var(--border);">
+          <div style="display:flex;gap:8px;margin-bottom:8px;">
+            <span class="badge status-{{ q.category.replace(' ','-')[:12] }}">{{ q.category }}</span>
+            <span style="font-size:12px;color:var(--muted);">{{ q.role_type }}</span>
+          </div>
+          <p style="font-size:14px;font-weight:600;margin:0 0 12px 0;">{{ q.question_text }}</p>
+          
+          <form method="POST" action="{{ url_for('main.record_response', id=interview.id) }}">
+            <input type="hidden" name="question_id" value="{{ q.id }}">
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+              <label style="display:flex;align-items:center;gap:4px;font-size:13px;cursor:pointer;">
+                <input type="checkbox" name="was_asked" value="1"> Was asked
+              </label>
+              <select name="difficulty" class="form-control" style="width:100px;height:32px;padding:4px 8px;font-size:12px;">
+                <option value="">Difficulty</option>
+                <option value="1">1 - Easy</option>
+                <option value="2">2</option>
+                <option value="3">3 - Medium</option>
+                <option value="4">4</option>
+                <option value="5">5 - Hard</option>
+              </select>
+              <button type="submit" class="btn btn-primary btn-sm">Log</button>
+            </div>
+          </form>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <p class="text-muted">No suggested questions available.</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Recorded Responses -->
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">Your Responses</span>
+    </div>
+    <div class="card-body">
+      {% if recorded %}
+      <div style="display:flex;flex-direction:column;gap:12px;">
+        {% for resp in recorded %}
+        <div style="padding:14px;background:var(--bg);border-radius:8px;border:1px solid var(--border);">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+            <span class="badge status-{{ resp.question.category.replace(' ','-')[:12] }}">{{ resp.question.category }}</span>
+            {% if resp.was_asked %}
+            <span style="font-size:12px;color:var(--success);font-weight:600;">&#10003; Asked</span>
+            {% endif %}
+          </div>
+          <p style="font-size:13px;font-weight:600;margin:0 0 6px 0;">{{ resp.question.question_text }}</p>
+          {% if resp.answer_notes %}
+          <div style="background:var(--card);padding:10px;border-radius:6px;font-size:13px;margin-top:8px;">
+            <span style="color:var(--muted);font-size:11px;text-transform:uppercase;">Your Answer:</span><br>
+            {{ resp.answer_notes }}
+          </div>
+          {% endif %}
+          {% if resp.difficulty %}
+          <div style="margin-top:6px;font-size:12px;color:var(--muted);">
+            Difficulty: {{ resp.difficulty }}/5
+          </div>
+          {% endif %}
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <p class="text-muted">No responses recorded yet. Start logging questions from the suggested list!</p>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+{% endblock %}

@@ -2,7 +2,7 @@ from flask import Blueprint, render_template, redirect, url_for, flash, request,
 from flask_login import login_required, current_user
 from datetime import datetime, timedelta
 from app import db
-from app.models import Application, Interview, Contact, Activity
+from app.models import Application, Interview, Contact, Activity, InterviewQuestion, InterviewResponse
 from app.utils import (
     parse_job_description, generate_tailoring_suggestions, generate_weekly_report,
     get_status_color, VALID_STATUSES
@@ -292,6 +292,14 @@ def profile():
         current_user.weekly_apps_goal = int(request.form.get('weekly_apps_goal', 5))
         current_user.weekly_net_goal = int(request.form.get('weekly_net_goal', 2))
         current_user.target_roles = request.form.get('target_roles', '').strip()
+        # Email settings
+        current_user.notify_daily_digest = bool(request.form.get('notify_daily_digest'))
+        current_user.notify_interview_reminders = bool(request.form.get('notify_interview_reminders'))
+        current_user.notify_followups = bool(request.form.get('notify_followups'))
+        current_user.smtp_server = request.form.get('smtp_server', '').strip()
+        current_user.smtp_port = int(request.form.get('smtp_port', 587))
+        current_user.smtp_username = request.form.get('smtp_username', '').strip()
+        current_user.smtp_password = request.form.get('smtp_password', '').strip()
         db.session.commit()
         flash('Profile updated!', 'success')
         return redirect(url_for('main.profile'))
@@ -330,3 +338,164 @@ def api_stats():
         'upcoming_interviews': upcoming_count,
         'pipeline': pipeline
     })
+
+# ========== EMAIL NOTIFICATIONS ==========
+
+@main_bp.route('/send-test-email')
+@login_required
+def send_test_email():
+    if not current_user.smtp_server or not current_user.smtp_username:
+        flash('Please configure SMTP settings in your profile first.', 'warning')
+        return redirect(url_for('main.profile'))
+    
+    from app.utils import send_email, generate_email_digest
+    
+    subject, html_body = generate_email_digest(current_user)
+    success, message = send_email(
+        current_user.smtp_server,
+        current_user.smtp_port,
+        current_user.smtp_username,
+        current_user.smtp_password,
+        current_user.email,
+        subject,
+        html_body
+    )
+    
+    if success:
+        flash('Test email sent! Check your inbox.', 'success')
+    else:
+        flash(f'Failed to send email: {message}', 'danger')
+    
+    return redirect(url_for('main.profile'))
+
+# ========== PDF RESUME EXPORT ==========
+
+@main_bp.route('/applications/<int:id>/resume-pdf')
+@login_required
+def resume_pdf(id):
+    app = Application.query.filter_by(id=id, user_id=current_user.id).first_or_404()
+    
+    from app.utils import generate_resume_pdf
+    import io
+    
+    pdf_buffer = generate_resume_pdf(current_user, app)
+    
+    return send_file(
+        pdf_buffer,
+        mimetype='application/pdf',
+        as_attachment=True,
+        download_name=f"{app.company}_{app.role}_Resume.pdf"
+    )
+
+# ========== INTERVIEW QUESTION BANK ==========
+
+@main_bp.route('/questions')
+@login_required
+def questions():
+    category_filter = request.args.get('category', '')
+    role_filter = request.args.get('role_type', '')
+    search = request.args.get('search', '').strip()
+    
+    query = InterviewQuestion.query
+    
+    if category_filter:
+        query = query.filter_by(category=category_filter)
+    if role_filter:
+        query = query.filter_by(role_type=role_filter)
+    if search:
+        query = query.filter(InterviewQuestion.question_text.ilike(f'%{search}%'))
+    
+    questions = query.order_by(InterviewQuestion.role_type, InterviewQuestion.category).all()
+    
+    # Get distinct categories and role types for filters
+    categories = db.session.query(InterviewQuestion.category).distinct().all()
+    role_types = db.session.query(InterviewQuestion.role_type).distinct().all()
+    
+    return render_template('questions.html', 
+        questions=questions,
+        categories=[c[0] for c in categories],
+        role_types=[r[0] for r in role_types],
+        current_category=category_filter,
+        current_role=role_filter,
+        search=search
+    )
+
+@main_bp.route('/questions/new', methods=['POST'])
+@login_required
+def new_question():
+    q = InterviewQuestion(
+        role_type=request.form.get('role_type', 'General'),
+        category=request.form.get('category', 'Behavioral'),
+        question_text=request.form.get('question_text', '').strip(),
+        is_default=False
+    )
+    db.session.add(q)
+    db.session.commit()
+    flash('Question added to your bank!', 'success')
+    return redirect(url_for('main.questions'))
+
+@main_bp.route('/interviews/<int:id>/questions')
+@login_required
+def interview_questions(id):
+    iv = Interview.query.join(Application).filter(
+        Interview.id == id,
+        Application.user_id == current_user.id
+    ).first_or_404()
+    
+    # Suggest questions based on role type
+    role_keywords = iv.application.role.lower()
+    if 'data' in role_keywords or 'scientist' in role_keywords or 'analyst' in role_keywords:
+        role_type = 'Data Scientist'
+    elif 'software' in role_keywords or 'engineer' in role_keywords or 'developer' in role_keywords:
+        role_type = 'Software Engineer'
+    else:
+        role_type = 'General'
+    
+    suggested = InterviewQuestion.query.filter(
+        InterviewQuestion.role_type.in_([role_type, 'General'])
+    ).all()
+    
+    # Get already recorded responses for this interview
+    recorded = InterviewResponse.query.filter_by(interview_id=id).all()
+    recorded_question_ids = {r.question_id for r in recorded}
+    
+    return render_template('interview_questions.html',
+        interview=iv,
+        suggested=suggested,
+        recorded=recorded,
+        recorded_question_ids=recorded_question_ids
+    )
+
+@main_bp.route('/interviews/<int:id>/questions/record', methods=['POST'])
+@login_required
+def record_response(id):
+    iv = Interview.query.join(Application).filter(
+        Interview.id == id,
+        Application.user_id == current_user.id
+    ).first_or_404()
+    
+    question_id = request.form.get('question_id')
+    answer_notes = request.form.get('answer_notes', '').strip()
+    was_asked = bool(request.form.get('was_asked'))
+    difficulty = request.form.get('difficulty')
+    
+    # Check if response already exists
+    existing = InterviewResponse.query.filter_by(interview_id=id, question_id=question_id).first()
+    
+    if existing:
+        existing.answer_notes = answer_notes
+        existing.was_asked = was_asked
+        existing.difficulty = int(difficulty) if difficulty else None
+    else:
+        resp = InterviewResponse(
+            interview_id=id,
+            question_id=question_id,
+            answer_notes=answer_notes,
+            was_asked=was_asked,
+            difficulty=int(difficulty) if difficulty else None
+        )
+        db.session.add(resp)
+    
+    db.session.commit()
+    flash('Response saved!', 'success')
+    return redirect(url_for('main.interview_questions', id=id))

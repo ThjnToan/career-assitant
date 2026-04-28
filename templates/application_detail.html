@@ -8,6 +8,7 @@
     <p style="color:var(--muted);font-size:16px;">{{ application.role }}</p>
   </div>
   <div class="d-flex gap-2">
+    <a href="{{ url_for('main.resume_pdf', id=application.id) }}" class="btn btn-success">Download Resume PDF</a>
     <a href="{{ url_for('main.edit_application', id=application.id) }}" class="btn btn-secondary">Edit</a>
     <form method="POST" action="{{ url_for('main.delete_application', id=application.id) }}" onsubmit="return confirm('Delete this application? This cannot be undone.')" style="display:inline;">
       <button type="submit" class="btn btn-danger">Delete</button>

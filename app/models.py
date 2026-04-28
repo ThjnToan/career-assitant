@@ -20,6 +20,15 @@ class User(UserMixin, db.Model):
     target_roles = db.Column(db.String(500), default='')
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
+    # Email notification preferences
+    notify_daily_digest = db.Column(db.Boolean, default=True)
+    notify_interview_reminders = db.Column(db.Boolean, default=True)
+    notify_followups = db.Column(db.Boolean, default=True)
+    smtp_server = db.Column(db.String(100), default='')
+    smtp_port = db.Column(db.Integer, default=587)
+    smtp_username = db.Column(db.String(120), default='')
+    smtp_password = db.Column(db.String(200), default='')
+    
     applications = db.relationship('Application', backref='user', lazy='dynamic', cascade='all, delete-orphan')
     contacts = db.relationship('Contact', backref='user', lazy='dynamic', cascade='all, delete-orphan')
     activities = db.relationship('Activity', backref='user', lazy='dynamic', cascade='all, delete-orphan')
@@ -120,4 +129,23 @@ class Activity(db.Model):
     entity_type = db.Column(db.String(50), default='')
     entity_id = db.Column(db.Integer, default=0)
     description = db.Column(db.String(500), default='')
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+class InterviewQuestion(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    role_type = db.Column(db.String(50), default='General')  # Software Engineer, Data Scientist, etc.
+    category = db.Column(db.String(50), default='Behavioral')  # Technical, Behavioral, System Design
+    question_text = db.Column(db.Text, nullable=False)
+    is_default = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    responses = db.relationship('InterviewResponse', backref='question', lazy='dynamic', cascade='all, delete-orphan')
+
+class InterviewResponse(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    interview_id = db.Column(db.Integer, db.ForeignKey('interview.id'), nullable=False)
+    question_id = db.Column(db.Integer, db.ForeignKey('interview_question.id'), nullable=False)
+    answer_notes = db.Column(db.Text, default='')
+    was_asked = db.Column(db.Boolean, default=False)
+    difficulty = db.Column(db.Integer, nullable=True)  # 1-5
     created_at = db.Column(db.DateTime, default=datetime.utcnow)

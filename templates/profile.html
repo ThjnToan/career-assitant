@@ -62,7 +62,47 @@
           <input type="text" name="target_roles" class="form-control" value="{{ user.target_roles }}" placeholder="Software Engineer, Data Scientist, Product Manager">
         </div>
 
-        <div style="display:flex;justify-content:flex-end;margin-top:8px;">
+        <h3 style="font-size:16px;text-transform:uppercase;color:var(--muted);margin:24px 0 16px;letter-spacing:0.5px;">Email Notifications</h3>
+        <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px;">
+          <label style="display:flex;align-items:center;gap:10px;font-size:14px;cursor:pointer;">
+            <input type="checkbox" name="notify_daily_digest" value="1" {% if user.notify_daily_digest %}checked{% endif %}>
+            Daily morning digest (interviews, follow-ups, weekly stats)
+          </label>
+          <label style="display:flex;align-items:center;gap:10px;font-size:14px;cursor:pointer;">
+            <input type="checkbox" name="notify_interview_reminders" value="1" {% if user.notify_interview_reminders %}checked{% endif %}>
+            Interview reminders (1 hour before)
+          </label>
+          <label style="display:flex;align-items:center;gap:10px;font-size:14px;cursor:pointer;">
+            <input type="checkbox" name="notify_followups" value="1" {% if user.notify_followups %}checked{% endif %}>
+            Overdue follow-up alerts
+          </label>
+        </div>
+
+        <h3 style="font-size:16px;text-transform:uppercase;color:var(--muted);margin:24px 0 16px;letter-spacing:0.5px;">SMTP Settings (for email notifications)</h3>
+        <div style="background:var(--bg);padding:16px;border-radius:8px;margin-bottom:16px;">
+          <p style="font-size:13px;color:var(--muted);margin-bottom:12px;">Enter your email provider's SMTP settings. For Gmail, use smtp.gmail.com with an app password.</p>
+          <div style="display:grid;grid-template-columns:2fr 1fr 2fr 2fr;gap:12px;">
+            <div class="form-group">
+              <label class="form-label">SMTP Server</label>
+              <input type="text" name="smtp_server" class="form-control" value="{{ user.smtp_server }}" placeholder="smtp.gmail.com">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Port</label>
+              <input type="number" name="smtp_port" class="form-control" value="{{ user.smtp_port or 587 }}">
+            </div>
+            <div class="form-group">
+              <label class="form-label">SMTP Username</label>
+              <input type="text" name="smtp_username" class="form-control" value="{{ user.smtp_username }}" placeholder="your@email.com">
+            </div>
+            <div class="form-group">
+              <label class="form-label">SMTP Password</label>
+              <input type="password" name="smtp_password" class="form-control" value="{{ user.smtp_password }}" placeholder="App password">
+            </div>
+          </div>
+        </div>
+
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;">
+          <a href="{{ url_for('main.send_test_email') }}" class="btn btn-secondary">Send Test Email</a>
           <button type="submit" class="btn btn-primary">Save Profile</button>
         </div>
       </form>
